@@ -1,1 +1,92 @@
 @import "tailwindcss";
+
+@theme {
+  --color-background: var(--bg-main);
+  --color-panel: var(--bg-panel);
+  --color-hover: var(--bg-hover);
+  --color-border: var(--border-color);
+  --color-main: var(--text-main);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent-color);
+  --color-accent-hover: var(--accent-hover);
+  
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Lora', serif;
+  --font-mono: 'Courier Prime', monospace;
+}
+
+@layer base {
+  /* TEMEL DEĞİŞKENLER VE 15 FARKLI TEMA */
+  :root, [data-theme="midnight"] {
+    --bg-main: #0f172a; --bg-panel: #1e293b; --bg-hover: #334155; --border-color: #334155;
+    --text-main: #f8fafc; --text-muted: #94a3b8; --accent-color: #3b82f6; --accent-hover: #2563eb;
+  }
+  [data-theme="obsidian"] {
+    --bg-main: #000000; --bg-panel: #121212; --bg-hover: #222222; --border-color: #272727;
+    --text-main: #ffffff; --text-muted: #a0a0a0; --accent-color: #ffffff; --accent-hover: #cccccc;
+  }
+  [data-theme="crimson"] {
+    --bg-main: #1a0505; --bg-panel: #2d0a0a; --bg-hover: #400f0f; --border-color: #400f0f;
+    --text-main: #fee2e2; --text-muted: #fca5a5; --accent-color: #ef4444; --accent-hover: #dc2626;
+  }
+  [data-theme="emerald"] {
+    --bg-main: #022c22; --bg-panel: #064e3b; --bg-hover: #065f46; --border-color: #065f46;
+    --text-main: #ecfdf5; --text-muted: #6ee7b7; --accent-color: #10b981; --accent-hover: #059669;
+  }
+  [data-theme="ocean"] {
+    --bg-main: #083344; --bg-panel: #164e63; --bg-hover: #155e75; --border-color: #155e75;
+    --text-main: #cffafe; --text-muted: #67e8f9; --accent-color: #06b6d4; --accent-hover: #0891b2;
+  }
+  [data-theme="royal"] {
+    --bg-main: #2e1065; --bg-panel: #4c1d95; --bg-hover: #5b21b6; --border-color: #5b21b6;
+    --text-main: #f5f3ff; --text-muted: #c4b5fd; --accent-color: #8b5cf6; --accent-hover: #7c3aed;
+  }
+  [data-theme="sunset"] {
+    --bg-main: #451a03; --bg-panel: #78350f; --bg-hover: #92400e; --border-color: #92400e;
+    --text-main: #fffbeb; --text-muted: #fcd34d; --accent-color: #f59e0b; --accent-hover: #d97706;
+  }
+  [data-theme="coffee"] {
+    --bg-main: #292524; --bg-panel: #44403c; --bg-hover: #57534e; --border-color: #57534e;
+    --text-main: #fafaf9; --text-muted: #d6d3d1; --accent-color: #a8a29e; --accent-hover: #78716c;
+  }
+  [data-theme="matrix"] {
+    --bg-main: #000000; --bg-panel: #0a1f0a; --bg-hover: #0f330f; --border-color: #0f330f;
+    --text-main: #22c55e; --text-muted: #166534; --accent-color: #4ade80; --accent-hover: #22c55e;
+  }
+  [data-theme="cyberpunk"] {
+    --bg-main: #170b2b; --bg-panel: #2d1b4e; --bg-hover: #402375; --border-color: #402375;
+    --text-main: #fdf4ff; --text-muted: #f5d0fe; --accent-color: #f472b6; --accent-hover: #db2777;
+  }
+  [data-theme="paper"] {
+    --bg-main: #f8fafc; --bg-panel: #ffffff; --bg-hover: #f1f5f9; --border-color: #e2e8f0;
+    --text-main: #0f172a; --text-muted: #64748b; --accent-color: #3b82f6; --accent-hover: #2563eb;
+  }
+  [data-theme="sepia"] {
+    --bg-main: #fdf6e3; --bg-panel: #eee8d5; --bg-hover: #e5dfc5; --border-color: #e5dfc5;
+    --text-main: #657b83; --text-muted: #93a1a1; --accent-color: #cb4b16; --accent-hover: #b58900;
+  }
+  [data-theme="frost"] {
+    --bg-main: #f0f9ff; --bg-panel: #ffffff; --bg-hover: #e0f2fe; --border-color: #bae6fd;
+    --text-main: #0c4a6e; --text-muted: #0369a1; --accent-color: #0ea5e9; --accent-hover: #0284c7;
+  }
+  [data-theme="rose"] {
+    --bg-main: #2e141a; --bg-panel: #4c1d28; --bg-hover: #672635; --border-color: #672635;
+    --text-main: #fff1f2; --text-muted: #fecdd3; --accent-color: #fb7185; --accent-hover: #e11d48;
+  }
+  [data-theme="gold"] {
+    --bg-main: #18181b; --bg-panel: #27272a; --bg-hover: #3f3f46; --border-color: #3f3f46;
+    --text-main: #fef3c7; --text-muted: #fde68a; --accent-color: #fbbf24; --accent-hover: #d97706;
+  }
+
+  body {
+    @apply bg-background text-main font-sans antialiased transition-colors duration-500 ease-in-out;
+    selection-background-color: var(--accent-color);
+    selection-color: #fff;
+  }
+  
+  /* Özel Kaydırma Çubuğu (Scrollbar) */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-main); }
+  ::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+}

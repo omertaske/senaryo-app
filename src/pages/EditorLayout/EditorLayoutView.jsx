@@ -1,4 +1,4 @@
-import { Home, Download, FileText, FileCode, Archive, X } from 'lucide-react';
+import { Home, Download, FileText, FileCode, Archive, X, Clapperboard } from 'lucide-react';
 import ScriptEditor from '../../components/editor/ScriptEditor';
 import Characters from '../../components/editor/Characters';
 import Locations from '../../components/editor/Locations';
@@ -7,21 +7,24 @@ import Catalogs from '../../components/editor/Catalogs';
 import Synopsis from '../../components/editor/Synopsis';
 import Treatment from '../../components/editor/Treatment';
 import StorageIndicator from '../../components/StorageIndicator';
-
-// MOTORLARI IMPORT ETTİK
+import ThemeSelector from '../../components/ThemeSelector';
 import { exportToFountain, exportToSenaryo, exportToPDF } from '../../lib/exportUtils';
 
 export default function EditorLayoutView({ project, activeTab, setActiveTab, handleGoHome, isExportModalOpen, setIsExportModalOpen }) {
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="flex h-screen bg-background text-main font-sans overflow-hidden transition-colors duration-500">
       
-      <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-10">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <span className="font-bold text-lg truncate" title={project.title}>{project.title}</span>
-          <button onClick={handleGoHome} className="text-gray-400 hover:text-white transition-colors bg-gray-900 p-2 rounded-full"><Home size={16} /></button>
+      {/* Şık Yan Menü */}
+      <aside className="w-72 bg-panel border-r border-border flex flex-col z-10 shadow-2xl">
+        <div className="p-6 border-b border-border flex items-center justify-between group cursor-pointer" onClick={handleGoHome}>
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="bg-accent/20 p-2 rounded-xl border border-accent/30"><Clapperboard size={20} className="text-accent" /></div>
+            <span className="font-bold text-lg truncate group-hover:text-accent transition-colors" title={project.title}>{project.title}</span>
+          </div>
+          <button className="text-muted hover:text-main transition-colors bg-background p-2 rounded-full shadow-inner"><Home size={16} /></button>
         </div>
         
-        <nav className="flex-1 p-2 space-y-1">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <TabButton name="Senaryo" id="script" current={activeTab} set={setActiveTab} />
           <TabButton name="Sinopsis" id="synopsis" current={activeTab} set={setActiveTab} />
           <TabButton name="Tretman" id="treatment" current={activeTab} set={setActiveTab} />
@@ -31,19 +34,21 @@ export default function EditorLayoutView({ project, activeTab, setActiveTab, han
           <TabButton name="Sekans / Beat" id="beats" current={activeTab} set={setActiveTab} />
         </nav>
         
-        <div className="px-4"><StorageIndicator /></div>
+        <div className="px-4 py-2"><StorageIndicator /></div>
+        <div className="px-4 py-2"><ThemeSelector /></div>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-t border-border">
           <button 
             onClick={() => setIsExportModalOpen(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 font-bold transition-colors shadow-lg"
+            className="w-full bg-accent hover:bg-accent-hover text-white px-4 py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-lg hover:-translate-y-1"
           >
             <Download size={20} /> Çıktı Al / İndir
           </button>
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto bg-gray-900 p-8">
+      {/* Dinamik Ana İçerik */}
+      <main className="flex-1 overflow-y-auto bg-background p-8 md:p-12 relative">
         {activeTab === 'script' && <ScriptEditor setActiveTab={setActiveTab}/> }
         {activeTab === 'synopsis' && <Synopsis />}
         {activeTab === 'treatment' && <Treatment />}
@@ -53,46 +58,43 @@ export default function EditorLayoutView({ project, activeTab, setActiveTab, han
         {activeTab === 'catalogs' && <Catalogs />}
       </main>
 
-      {/* YENİ: DIŞA AKTARIM (EXPORT) MODALI */}
+      {/* Şık İndirme Modalı */}
       {isExportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in" onClick={() => setIsExportModalOpen(false)}>
-          <div className="bg-gray-800 border border-gray-600 rounded-2xl w-full max-w-2xl shadow-2xl relative flex flex-col p-8" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setIsExportModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white bg-gray-900 p-2 rounded-full"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-in fade-in" onClick={() => setIsExportModalOpen(false)}>
+          <div className="bg-panel border border-border rounded-3xl w-full max-w-3xl shadow-[0_0_60px_rgba(0,0,0,0.5)] relative flex flex-col p-10" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setIsExportModalOpen(false)} className="absolute top-6 right-6 text-muted hover:text-main bg-background border border-border p-2 rounded-full transition-all hover:rotate-90"><X size={20} /></button>
             
-            <h2 className="text-2xl font-bold text-white mb-2">Projeyi İndir</h2>
-            <p className="text-gray-400 text-sm mb-8">İhtiyacınıza uygun formatı seçin.</p>
+            <h2 className="text-3xl font-bold text-main mb-2">Eserini Dışa Aktar</h2>
+            <p className="text-muted text-sm mb-10">Senaryonu stüdyolara, ajanslara veya yönetmene göndermek için en uygun formatı seç.</p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              
-              <button onClick={() => { exportToPDF(project); setIsExportModalOpen(false); }} className="bg-gray-900 border border-gray-700 hover:border-red-500 rounded-xl p-6 flex flex-col items-center justify-center gap-4 group transition-all">
-                <div className="bg-red-500/20 p-4 rounded-full text-red-500 group-hover:scale-110 transition-transform"><FileText size={32}/></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <button onClick={() => { exportToPDF(project); setIsExportModalOpen(false); }} className="bg-background border border-border hover:border-red-500 rounded-2xl p-8 flex flex-col items-center justify-center gap-4 group transition-all hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(239,68,68,0.2)]">
+                <div className="bg-red-500/10 p-5 rounded-full text-red-500 group-hover:scale-110 transition-transform"><FileText size={36}/></div>
                 <div className="text-center">
-                  <h3 className="font-bold text-white mb-1">Gelişmiş PDF</h3>
-                  <p className="text-[10px] text-gray-500">Tüm proje (Sinopsis, Karakterler, Senaryo) tek dosya halinde kitap gibi yazdırılır.</p>
+                  <h3 className="font-bold text-main mb-2">Gelişmiş PDF</h3>
+                  <p className="text-xs text-muted leading-relaxed">Senopsis, Karakterler ve Senaryo Hollywood A4 standartlarında kitap gibi basılır.</p>
                 </div>
               </button>
 
-              <button onClick={() => { exportToSenaryo(project); setIsExportModalOpen(false); }} className="bg-gray-900 border border-gray-700 hover:border-blue-500 rounded-xl p-6 flex flex-col items-center justify-center gap-4 group transition-all">
-                <div className="bg-blue-500/20 p-4 rounded-full text-blue-500 group-hover:scale-110 transition-transform"><Archive size={32}/></div>
+              <button onClick={() => { exportToSenaryo(project); setIsExportModalOpen(false); }} className="bg-background border border-border hover:border-blue-500 rounded-2xl p-8 flex flex-col items-center justify-center gap-4 group transition-all hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(59,130,246,0.2)]">
+                <div className="bg-blue-500/10 p-5 rounded-full text-blue-500 group-hover:scale-110 transition-transform"><Archive size={36}/></div>
                 <div className="text-center">
-                  <h3 className="font-bold text-white mb-1">Proje Yedek (.senaryo)</h3>
-                  <p className="text-[10px] text-gray-500">Başka bir kullanıcıya göndermek veya yedeklemek için tüm medya ve yazıları sıkıştırır.</p>
+                  <h3 className="font-bold text-main mb-2">Proje Dosyası</h3>
+                  <p className="text-xs text-muted leading-relaxed">Sesler ve resimler dahil her şeyi <b>.senaryo</b> uzantılı tek bir dosyaya sıkıştırır.</p>
                 </div>
               </button>
 
-              <button onClick={() => { exportToFountain(project); setIsExportModalOpen(false); }} className="bg-gray-900 border border-gray-700 hover:border-amber-500 rounded-xl p-6 flex flex-col items-center justify-center gap-4 group transition-all">
-                <div className="bg-amber-500/20 p-4 rounded-full text-amber-500 group-hover:scale-110 transition-transform"><FileCode size={32}/></div>
+              <button onClick={() => { exportToFountain(project); setIsExportModalOpen(false); }} className="bg-background border border-border hover:border-amber-500 rounded-2xl p-8 flex flex-col items-center justify-center gap-4 group transition-all hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(245,158,11,0.2)]">
+                <div className="bg-amber-500/10 p-5 rounded-full text-amber-500 group-hover:scale-110 transition-transform"><FileCode size={36}/></div>
                 <div className="text-center">
-                  <h3 className="font-bold text-white mb-1">Fountain (.fountain)</h3>
-                  <p className="text-[10px] text-gray-500">Sadece senaryo metnini Final Draft, Celtx gibi programlarda açılacak şekilde verir.</p>
+                  <h3 className="font-bold text-main mb-2">Fountain</h3>
+                  <p className="text-xs text-muted leading-relaxed">Sadece senaryo metnini Final Draft veya Celtx programlarında açılacak şekilde verir.</p>
                 </div>
               </button>
-
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }
@@ -100,7 +102,7 @@ export default function EditorLayoutView({ project, activeTab, setActiveTab, han
 function TabButton({ name, id, current, set }) {
   const isActive = current === id;
   return (
-    <button onClick={() => set(id)} className={`w-full text-left px-4 py-3 text-sm rounded-lg transition-all font-semibold ${isActive ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'hover:bg-gray-700 text-gray-400 border border-transparent'}`}>
+    <button onClick={() => set(id)} className={`w-full text-left px-5 py-3.5 text-sm rounded-xl transition-all font-bold tracking-wide ${isActive ? 'bg-accent text-white shadow-md shadow-accent/20 translate-x-1' : 'text-muted hover:bg-hover hover:text-main'}`}>
       {name}
     </button>
   );
