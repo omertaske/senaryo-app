@@ -1,90 +1,210 @@
-import { Plus, Trash2, StickyNote, Link, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Upload, Archive, Car, BookOpen, Music, Search, Edit2 } from 'lucide-react';
 
-export default function CatalogsView({ catalogs, addCatalogItem, updateCatalogItem, deleteCatalogItem }) {
-  
-  // Tipe göre ikon belirleme
-  const getIcon = (type) => {
-    if(type === 'Link') return <Link size={24} className="text-blue-400" />;
-    if(type === 'Resim') return <ImageIcon size={24} className="text-purple-400" />;
-    return <StickyNote size={24} className="text-yellow-400" />;
+export default function CatalogView({
+  catalogs, filter, setFilter, viewMode, activeItemId,
+  addItem, updateItem, deleteItem, openEdit, goBack
+}) {
+  const activeItem = catalogs.find(c => c.id === activeItemId);
+
+  // Kategori ikonlarını ve renklerini belirleyen yardımcı fonksiyon
+  const getCategoryDetails = (cat) => {
+    switch(cat) {
+      case 'prop': return { icon: <Archive size={16} />, label: 'Eşya / Obje', color: 'text-amber-400', bg: 'bg-amber-400/20' };
+      case 'vehicle': return { icon: <Car size={16} />, label: 'Araç / Taşıt', color: 'text-blue-400', bg: 'bg-blue-400/20' };
+      case 'lore': return { icon: <BookOpen size={16} />, label: 'Evren Kuralı', color: 'text-purple-400', bg: 'bg-purple-400/20' };
+      case 'music': return { icon: <Music size={16} />, label: 'Müzik / Ses', color: 'text-pink-400', bg: 'bg-pink-400/20' };
+      default: return { icon: <Archive size={16} />, label: 'Bilinmeyen', color: 'text-gray-400', bg: 'bg-gray-400/20' };
+    }
   };
 
+  // FOTOĞRAF YÜKLEME FONKSİYONU
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result;
+      updateItem(activeItem.id, 'photos', [...(activeItem.photos || []), base64String]);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // 1. DÜZENLEME EKRANI
+  if (viewMode === 'edit' && activeItem) {
+    const details = getCategoryDetails(activeItem.category);
+    
+    return (
+      <div className="max-w-4xl mx-auto pb-20 animate-in fade-in">
+        <div className="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+          <button onClick={goBack} className="text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
+            <ArrowLeft size={20} /> Kataloğa Dön
+          </button>
+          <button onClick={() => deleteItem(activeItem.id)} className="text-red-500 hover:text-red-400 flex items-center gap-2">
+            <Trash2 size={20} /> Öğeyi Sil
+          </button>
+        </div>
+
+        <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          
+          <div className="flex gap-4 mb-8">
+            <div className={`p-4 rounded-xl flex items-center justify-center ${details.bg} ${details.color}`}>
+              {details.icon}
+            </div>
+            <div className="flex-1">
+              <input 
+                type="text" 
+                value={activeItem.name} 
+                onChange={(e) => updateItem(activeItem.id, 'name', e.target.value)} 
+                className="bg-transparent text-3xl font-bold text-white uppercase tracking-wider outline-none w-full border-b border-gray-700 focus:border-white pb-2" 
+                placeholder="ÖĞENİN ADINI GİRİN (Örn: Mavi İksir)" 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs text-gray-400 uppercase tracking-wider font-bold">Kategori</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {['prop', 'vehicle', 'lore', 'music'].map(cat => (
+                    <button 
+                      key={cat} 
+                      onClick={() => updateItem(activeItem.id, 'category', cat)} 
+                      className={`py-3 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all ${activeItem.category === cat ? getCategoryDetails(cat).bg + ' ' + getCategoryDetails(cat).color + ' border border-current' : 'bg-gray-900 text-gray-500 hover:text-gray-300'}`}
+                    >
+                      {getCategoryDetails(cat).icon} {getCategoryDetails(cat).label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs text-gray-400 uppercase tracking-wider font-bold">Hikayedeki Önemi</label>
+                <select 
+                  value={activeItem.importance} 
+                  onChange={(e) => updateItem(activeItem.id, 'importance', e.target.value)}
+                  className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-white outline-none focus:border-blue-500 appearance-none font-semibold cursor-pointer"
+                >
+                  <option value="Kritik">Kritik (Hikayeyi değiştirir)</option>
+                  <option value="Normal">Normal (Detay katar)</option>
+                  <option value="Arka Plan">Arka Plan (Atmosfer içindir)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs text-gray-400 uppercase tracking-wider font-bold">Görsel / Referans</label>
+                <div className="flex gap-3 flex-wrap">
+                  {activeItem.photos?.map((photo, i) => (
+                    <div key={i} className="relative group w-24 h-24 rounded-lg overflow-hidden border border-gray-700 shadow-md">
+                      <img src={photo} alt="Referans" className="w-full h-full object-cover" />
+                      <button onClick={() => updateItem(activeItem.id, 'photos', activeItem.photos.filter((_, index) => index !== i))} className="absolute inset-0 bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"><Trash2 size={20}/></button>
+                    </div>
+                  ))}
+                  <label className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-600 flex flex-col items-center justify-center text-gray-400 hover:text-white hover:border-white hover:bg-gray-700 cursor-pointer transition-all">
+                    <Upload size={20} />
+                    <span className="text-[10px] mt-2 font-bold uppercase tracking-wider">Yükle</span>
+                    <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                  </label>
+                </div>
+              </div>
+            </div>
+            {/* YENİ: MULTİMEDYA / MÜZİK / VİDEO ALANI */}
+              <div className="flex flex-col gap-2 pt-4 border-t border-gray-700">
+                <label className="text-xs text-gray-400 uppercase tracking-wider font-bold flex items-center gap-2">
+                  <Music size={14} className="text-pink-400"/> Multimedya / Müzik Linki
+                </label>
+                <input 
+                  type="text" 
+                  value={activeItem.mediaLink || ''} 
+                  onChange={(e) => updateItem(activeItem.id, 'mediaLink', e.target.value)} 
+                  className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm text-white outline-none focus:border-pink-500 transition-colors" 
+                  placeholder="YouTube video linki veya MP3 ses linki yapıştırın..." 
+                />
+                <p className="text-[10px] text-gray-500">Bu öğeye tıklandığında senaryo ekranında bu müzik/video oynatılır.</p>
+              </div>
+
+            <div className="col-span-1 md:col-span-2 mt-4">
+              <label className="text-xs text-gray-400 uppercase tracking-wider font-bold block mb-2">Detaylı Açıklama / Tarihçe</label>
+              <textarea 
+                value={activeItem.description} 
+                onChange={(e) => updateItem(activeItem.id, 'description', e.target.value)} 
+                className="w-full h-48 bg-gray-900 border border-gray-700 rounded-lg p-5 text-gray-200 outline-none focus:border-white resize-none leading-relaxed text-lg font-serif" 
+                placeholder="Bu eşyanın veya kuralın hikayesi nedir? Nereden geldi? Kim kullanır?..." 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // FİLTRELEME İŞLEMİ
+  const filteredCatalogs = filter === 'all' ? catalogs : catalogs.filter(c => c.category === filter);
+
+  // 2. ANA EKRAN (IZGARA/GALERİ GÖRÜNÜMÜ)
   return (
-    <div className="max-w-6xl mx-auto pb-20">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-white">Araştırma Katalogları</h2>
-        <button
-          onClick={addCatalogItem}
-          className="bg-yellow-600 hover:bg-yellow-700 text-white px-5 py-3 rounded-lg flex items-center gap-2 font-semibold transition-colors"
-        >
-          <Plus size={20} />
-          Yeni Materyal Ekle
+    <div className="max-w-6xl mx-auto pb-20 relative animate-in fade-in">
+      
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">Katalog (Asset Library)</h2>
+          <p className="text-gray-400 text-sm mt-1">Prodüksiyon aşamasında kullanılacak veya hikayeyi şekillendiren objeleri, araçları ve kuralları burada toplayın.</p>
+        </div>
+        <button onClick={addItem} className="bg-white hover:bg-gray-200 text-black px-5 py-3 rounded-lg flex items-center gap-2 font-bold transition-colors shadow-lg">
+          <Plus size={20} /> Yeni Öğe
         </button>
       </div>
 
-      {/* Masonry benzeri ızgara yapısı */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-        {catalogs.map((item) => (
-          <div key={item.id} className="bg-gray-800 border border-gray-700 rounded-xl p-5 flex flex-col gap-4 group relative hover:border-yellow-500/50 transition-colors">
-            
-            <button
-              onClick={() => deleteCatalogItem(item.id)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Trash2 size={20} />
-            </button>
-
-            <div className="flex items-center gap-3">
-              {getIcon(item.type)}
-              <select
-                value={item.type}
-                onChange={(e) => updateCatalogItem(item.id, 'type', e.target.value)}
-                className="bg-gray-900 text-gray-300 text-sm rounded border border-gray-700 p-1 outline-none"
-              >
-                <option value="Not">Not</option>
-                <option value="Link">Bağlantı</option>
-                <option value="Resim">Resim (URL)</option>
-              </select>
-            </div>
-
-            <input
-              type="text"
-              value={item.title}
-              onChange={(e) => updateCatalogItem(item.id, 'title', e.target.value)}
-              className="w-full bg-transparent text-xl font-bold text-white outline-none border-b border-transparent focus:border-yellow-500 placeholder-gray-500"
-              placeholder="Materyal Başlığı"
-            />
-
-            {item.type === 'Resim' ? (
-              <div className="flex flex-col gap-2">
-                <input 
-                  type="text" 
-                  value={item.content}
-                  onChange={(e) => updateCatalogItem(item.id, 'content', e.target.value)}
-                  placeholder="Resim URL'sini buraya yapıştır..."
-                  className="bg-gray-900 border border-gray-700 rounded p-2 text-sm outline-none focus:border-yellow-500"
-                />
-                {item.content && <img src={item.content} alt={item.title} className="w-full h-auto rounded-lg object-cover mt-2 border border-gray-700" />}
-              </div>
-            ) : item.type === 'Link' ? (
-              <input 
-                type="url" 
-                value={item.content}
-                onChange={(e) => updateCatalogItem(item.id, 'content', e.target.value)}
-                placeholder="https://..."
-                className="bg-gray-900 border border-gray-700 rounded p-2 text-sm outline-none focus:border-yellow-500 text-blue-400 underline"
-              />
-            ) : (
-              <textarea
-                value={item.content}
-                onChange={(e) => updateCatalogItem(item.id, 'content', e.target.value)}
-                className="w-full h-32 bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm text-gray-300 outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 resize-none"
-                placeholder="Araştırma notların, tarihsel detaylar vs..."
-              />
-            )}
-          </div>
-        ))}
+      {/* FİLTRELEME ÇUBUĞU */}
+      <div className="flex gap-2 border-b border-gray-800 pb-6 mb-8 overflow-x-auto">
+        <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${filter === 'all' ? 'bg-white text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}>Tümü</button>
+        <button onClick={() => setFilter('prop')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${filter === 'prop' ? 'bg-amber-400/20 text-amber-400 border border-amber-400/50' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}><Archive size={14}/> Eşyalar</button>
+        <button onClick={() => setFilter('vehicle')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${filter === 'vehicle' ? 'bg-blue-400/20 text-blue-400 border border-blue-400/50' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}><Car size={14}/> Araçlar</button>
+        <button onClick={() => setFilter('lore')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${filter === 'lore' ? 'bg-purple-400/20 text-purple-400 border border-purple-400/50' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}><BookOpen size={14}/> Evren Kuralları</button>
+        <button onClick={() => setFilter('music')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${filter === 'music' ? 'bg-pink-400/20 text-pink-400 border border-pink-400/50' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'}`}><Music size={14}/> Müzikler</button>
       </div>
+
+      {filteredCatalogs.length === 0 && (
+        <div className="text-center py-20 text-gray-500 border-2 border-dashed border-gray-800 rounded-2xl">
+          <Search size={48} className="mx-auto mb-4 opacity-50" />
+          <p className="font-bold text-lg">Bu kategoride henüz bir öğe yok.</p>
+          <p className="text-sm mt-1">Hikayenize renk katacak eşyalar veya araçlar ekleyin.</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {filteredCatalogs.map((item) => {
+          const details = getCategoryDetails(item.category);
+          return (
+            <div key={item.id} onClick={() => openEdit(item.id)} className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden group relative flex flex-col shadow-lg cursor-pointer hover:border-gray-500 transition-all hover:-translate-y-1">
+              
+              <div className="h-40 bg-gray-900 relative">
+                {item.photos && item.photos.length > 0 ? (
+                  <img src={item.photos[0]} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center opacity-30 ${details.color}`}>{details.icon}</div>
+                )}
+                
+                <div className={`absolute top-3 left-3 px-2 py-1 rounded text-[10px] font-bold uppercase backdrop-blur-md ${details.bg} ${details.color} border border-current`}>
+                  {details.label}
+                </div>
+                {item.importance === 'Kritik' && (
+                  <div className="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 rounded text-[10px] font-bold uppercase shadow-lg">Kritik</div>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-gray-700">
+                <h3 className="font-bold text-lg text-white truncate">{item.name || 'İSİMSİZ ÖĞE'}</h3>
+                <p className="text-xs text-gray-400 mt-1 line-clamp-2">{item.description || 'Açıklama girilmedi.'}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
     </div>
   );
 }

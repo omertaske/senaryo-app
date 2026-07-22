@@ -6,6 +6,7 @@ const ScriptBlock = forwardRef(({
   updateBlock, 
   handleKeyDown,
   characters,
+  catalogs, // YENİ: Katalog verilerini ScriptBlock'a prop olarak geçiyoruz
   locations,
   openQuickPreview // YENİ: Ctrl+Tık ışınlanması için sekmeyi değiştiren fonksiyon
 }, ref) => {
@@ -113,6 +114,16 @@ const ScriptBlock = forwardRef(({
         // Mekanı veritabanında bul
         const found = locations.find(l => l.name.toUpperCase() === cleanSceneSearch);
         if (found) openQuickPreview('location', found);
+      }
+      if (catalogs && catalogs.length > 0) {
+        for (let item of catalogs) {
+          const itemName = item.name.toUpperCase();
+          const idx = text.indexOf(itemName);
+          // Eğer kelime metinde geçiyorsa VE imlecimiz (tıkladığımız yer) o kelimenin üzerindeyse:
+          if (idx !== -1 && cursorPos >= idx && cursorPos <= idx + itemName.length) {
+            return openQuickPreview('catalog', item); // Katalog multimedya modalını aç!
+          }
+        }
       }
     }
   };

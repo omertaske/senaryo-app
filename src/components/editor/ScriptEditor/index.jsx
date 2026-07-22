@@ -6,10 +6,9 @@ import ScriptEditorView from './ScriptEditorView';
 const BLOCK_TYPES = ['action', 'character', 'dialogue', 'parenthetical', 'scene'];
 
 export default function ScriptEditor({ setActiveTab }) {
-  const { activeProject, updateActiveProject , setTempEditTarget } = useProjectStore();
+  const { activeProject, updateActiveProject, setTempEditTarget } = useProjectStore();
 
   // BÖLÜM (EPISODE) VERİTABANI YÖNETİMİ
-  // Eğer projede daha önceden episode yoksa (eski projeyse), var olan sahneleri Bölüm 1'in içine alır.
   const episodes = activeProject?.episodes?.length > 0 
     ? activeProject.episodes 
     : [{ 
@@ -25,19 +24,24 @@ export default function ScriptEditor({ setActiveTab }) {
   const inputRefs = useRef({});
   const [focusId, setFocusId] = useState(null);
   
-  // KARAKTER VE MEKAN VERİLERİ (Otomatik Ekleme İçin)
+  // KARAKTER, MEKAN VE ÖNİZLEME STATELERİ
   const [pendingItem, setPendingItem] = useState(null);
   const characters = activeProject?.characters || [];
   const locations = activeProject?.locations || [];
+  const catalogs = activeProject?.catalogs || []; // YENİ: Katalog verileri
   const [quickPreview, setQuickPreview] = useState(null);
+
+  // YENİ: YOL HARİTASI (HİKAYE HARİTASI YAN PANELİ) İÇİN STATELER
+  const [showRoadmap, setShowRoadmap] = useState(false);
+  const sequences = activeProject?.sequences || []; // Beats panosundan gelen veriler
 
   const openQuickPreview = (type, data) => setQuickPreview({ type, data });
   const closeQuickPreview = () => setQuickPreview(null);
   
   const goToEdit = (type, id) => {
-    setTempEditTarget(type, id); // Hafızaya hedefi yaz
-    setQuickPreview(null); // Modalı kapat
-    if (type === 'character') setActiveTab('characters'); // Sekmeye ışınla!
+    setTempEditTarget(type, id); 
+    setQuickPreview(null); 
+    if (type === 'character') setActiveTab('characters'); 
     if (type === 'location') setActiveTab('locations');
   };
 
@@ -49,7 +53,6 @@ export default function ScriptEditor({ setActiveTab }) {
         if (el) {
           el.focus();
           el.setSelectionRange(el.value.length, el.value.length);
-          // Yazarken ekranı ortalayarak aşağı kaydırır
           el.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
           setFocusId(null);
         }
@@ -60,7 +63,6 @@ export default function ScriptEditor({ setActiveTab }) {
   // VERİ KAYDETME FONKSİYONLARI
   const saveBlocks = (newBlocks) => {
     const updatedEpisodes = episodes.map(ep => ep.id === activeEpId ? { ...ep, scenes: newBlocks } : ep);
-    // scenes'i de güncelliyoruz ki geriye dönük uyumluluk bozulmasın
     updateActiveProject({ episodes: updatedEpisodes, scenes: newBlocks }); 
   };
 
@@ -75,6 +77,7 @@ export default function ScriptEditor({ setActiveTab }) {
     updateActiveProject({ episodes: [...episodes, newEp] });
     setActiveEpId(newEpId);
   };
+
   const deleteEpisode = (id) => {
     if (episodes.length === 1) {
       alert("Senaryoda en az 1 bölüm bulunmalıdır.");
@@ -83,14 +86,10 @@ export default function ScriptEditor({ setActiveTab }) {
     if (window.confirm("Bu bölümü ve içindeki tüm sahneleri silmek istediğinize emin misiniz?")) {
       const updatedEpisodes = episodes.filter(ep => ep.id !== id);
       updateActiveProject({ episodes: updatedEpisodes });
-      // Eğer silinen sekmedeysek, ilk sekmeye geç
       if (activeEpId === id) setActiveEpId(updatedEpisodes[0].id);
     }
   };
 
-
-
-  // KARAKTER/MEKAN ONAYLANIRSA VERİTABANINA EKLE
   const confirmAddItem = () => {
     if (pendingItem?.type === 'character') {
       const newChar = { id: uuidv4(), name: pendingItem.name, role: '', description: '' };
@@ -102,10 +101,7 @@ export default function ScriptEditor({ setActiveTab }) {
     setPendingItem(null);
   };
 
-  // KLAVYE KISAYOLLARI
   const handleKeyDown = (e, index, block) => {
-    
-    // TAB: Tür Değiştir
     if (e.key === 'Tab') {
       e.preventDefault();
       const nextType = BLOCK_TYPES[(BLOCK_TYPES.indexOf(block.type) + 1) % BLOCK_TYPES.length];
@@ -114,11 +110,9 @@ export default function ScriptEditor({ setActiveTab }) {
       saveBlocks(newBlocks);
     }
 
-    // ENTER: Yeni Satır Aç
     if (e.key === 'Enter') {
       e.preventDefault();
       
-      // 1. Yeni Karakter veya Mekan yazılmış mı kontrol et
       if (block.type === 'character') {
         const typedName = block.text.trim().toUpperCase();
         if (typedName && !characters.some(c => c.name.toUpperCase() === typedName)) {
@@ -132,14 +126,12 @@ export default function ScriptEditor({ setActiveTab }) {
         }
       }
 
-      // 2. Bir sonraki satırın türünü belirle
       let nextType = 'action'; 
       if (block.type === 'character') nextType = 'dialogue';
       if (block.type === 'dialogue') nextType = 'character'; 
       if (block.type === 'parenthetical') nextType = 'dialogue';
       if (block.type === 'scene') nextType = 'action';
 
-      // 3. Yeni satırı ekle
       const newId = uuidv4(); 
       const newBlocks = [...blocks];
       newBlocks.splice(index + 1, 0, { id: newId, type: nextType, text: '' }); 
@@ -148,7 +140,6 @@ export default function ScriptEditor({ setActiveTab }) {
       setFocusId(newId);
     }
 
-    // BACKSPACE: Boş Satırı Sil
     if (e.key === 'Backspace' && block.text === '') {
       e.preventDefault();
       if (blocks.length > 1) { 
@@ -158,7 +149,6 @@ export default function ScriptEditor({ setActiveTab }) {
       }
     }
 
-    // YÖN TUŞLARI: Satırlar Arası Gezinme
     if (e.key === 'ArrowUp' && index > 0) {
       e.preventDefault();
       setFocusId(blocks[index - 1].id);
@@ -175,25 +165,26 @@ export default function ScriptEditor({ setActiveTab }) {
       updateBlock={updateBlock}
       handleKeyDown={handleKeyDown}
       inputRefs={inputRefs}
-      
-      // Auto-complete ve Bildirim Verileri
       characters={characters}
       locations={locations}
+      catalogs={catalogs}
       pendingItem={pendingItem}
       confirmAddItem={confirmAddItem}
       cancelAddItem={() => setPendingItem(null)}
-      
-      // Dizi/Bölüm Verileri
       episodes={episodes}
       activeEpId={activeEpId}
       setActiveEpId={setActiveEpId}
       addNewEpisode={addNewEpisode}
-      deleteEpisode={deleteEpisode} // YENİ
-      setActiveTab={setActiveTab} // YENİ
+      deleteEpisode={deleteEpisode}
+      setActiveTab={setActiveTab}
       quickPreview={quickPreview}
       openQuickPreview={openQuickPreview}
       closeQuickPreview={closeQuickPreview}
       goToEdit={goToEdit}
+      // Yol Haritası (Yan Panel) Propları
+      showRoadmap={showRoadmap}
+      setShowRoadmap={setShowRoadmap}
+      sequences={sequences}
     />
   );
 }
