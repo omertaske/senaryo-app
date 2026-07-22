@@ -25,7 +25,7 @@ export default function DashboardView({
         
         {/* Oluşturma ve İçe Aktarma Paneli */}
         <div className="flex flex-col md:flex-row gap-4 mb-16 bg-panel p-2 rounded-2xl border border-border shadow-2xl backdrop-blur-md">
-          <form onSubmit={handleCreate} className="flex flex-1 gap-2 p-2">
+          <form onSubmit={handleCreate} className="flex flex-1 gap-2 p-2  ">
             <input 
               type="text" 
               value={newTitle}

@@ -7,7 +7,6 @@ import Catalogs from '../../components/editor/Catalogs';
 import Synopsis from '../../components/editor/Synopsis';
 import Treatment from '../../components/editor/Treatment';
 import StorageIndicator from '../../components/StorageIndicator';
-import ThemeSelector from '../../components/ThemeSelector';
 import { exportToFountain, exportToSenaryo, exportToPDF } from '../../lib/exportUtils';
 
 export default function EditorLayoutView({ project, activeTab, setActiveTab, handleGoHome, isExportModalOpen, setIsExportModalOpen }) {
@@ -35,7 +34,7 @@ export default function EditorLayoutView({ project, activeTab, setActiveTab, han
         </nav>
         
         <div className="px-4 py-2"><StorageIndicator /></div>
-        <div className="px-4 py-2"><ThemeSelector /></div>
+       
 
         <div className="p-4 border-t border-border">
           <button 

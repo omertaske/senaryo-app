@@ -3,6 +3,7 @@ import { Palette, Check } from 'lucide-react';
 import { useThemeStore } from '../store/useThemeStore';
 
 const THEMES = [
+  // Mevcut Temalar
   { id: 'midnight', name: 'Gece Yarısı', color: '#0f172a' },
   { id: 'obsidian', name: 'Obsidyen', color: '#000000' },
   { id: 'crimson', name: 'Kızıl Ay', color: '#2d0a0a' },
@@ -17,7 +18,17 @@ const THEMES = [
   { id: 'sepia', name: 'Klasik Daktilo', color: '#eee8d5' },
   { id: 'frost', name: 'Buzul', color: '#e0f2fe' },
   { id: 'rose', name: 'Gül Kurusu', color: '#4c1d28' },
-  { id: 'gold', name: 'Altın Vadi', color: '#27272a' }
+  { id: 'gold', name: 'Altın Vadi', color: '#27272a' },
+  { id: 'cosmic', name: 'Kozmik Boşluk', color: '#090d16' },
+  { id: 'storm', name: 'Gece Fırtınası', color: '#111827' },
+  { id: 'nordic', name: 'Nordik Sis', color: '#1e2229' },
+  { id: 'noir', name: 'Kara Film (Film Noir)', color: '#141414' },
+  { id: 'amber', name: 'Eski Terminal', color: '#120f0a' },
+  { id: 'velvet', name: 'Koyu Kadife', color: '#210f1c' },
+  { id: 'abyss', name: 'Okyanus Dibi', color: '#04151f' },
+  { id: 'canyon', name: 'Gece Kanyonu', color: '#221611' },
+  { id: 'vampire', name: 'Gotik Saray', color: '#1c0a0a' },
+  { id: 'cyber-drk', name: 'Siber Savaş', color: '#0c1017' }
 ];
 
 export default function ThemeSelector() {
@@ -31,13 +42,14 @@ export default function ThemeSelector() {
         className="w-full bg-panel hover:bg-hover text-main border border-border px-4 py-3 rounded-xl flex items-center justify-between font-semibold transition-all shadow-md"
       >
         <div className="flex items-center gap-2"><Palette size={18} className="text-accent" /> Tema Seç</div>
-        <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: THEMES.find(t=>t.id===activeTheme)?.color }}></div>
+        <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: THEMES.find(t => t.id === activeTheme)?.color }}></div>
       </button>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
-          <div className="absolute bottom-full left-0 mb-2 w-64 bg-panel border border-border rounded-2xl shadow-2xl z-50 p-3 grid grid-cols-5 gap-2 animate-in fade-in zoom-in-95">
+          {/* top-full ve mt-2 ile menü artık butonun ALTINA doğru açılıyor */}
+          <div className="absolute top-full left-0 mt-2 w-64 bg-panel border border-border rounded-2xl shadow-2xl z-50 p-3 grid grid-cols-5 gap-2 animate-in fade-in zoom-in-95">
             <div className="col-span-5 text-xs text-muted font-bold uppercase tracking-widest mb-2 pb-2 border-b border-border">Auteur Temaları</div>
             {THEMES.map(theme => (
               <button

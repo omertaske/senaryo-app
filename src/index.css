@@ -16,7 +16,6 @@
 }
 
 @layer base {
-  /* TEMEL DEĞİŞKENLER VE 15 FARKLI TEMA */
   :root, [data-theme="midnight"] {
     --bg-main: #0f172a; --bg-panel: #1e293b; --bg-hover: #334155; --border-color: #334155;
     --text-main: #f8fafc; --text-muted: #94a3b8; --accent-color: #3b82f6; --accent-hover: #2563eb;
@@ -78,13 +77,52 @@
     --text-main: #fef3c7; --text-muted: #fde68a; --accent-color: #fbbf24; --accent-hover: #d97706;
   }
 
+  /* YENİ 10 TEMA DEĞİŞKENLERİ */
+  [data-theme="cosmic"] {
+    --bg-main: #090d16; --bg-panel: #111726; --bg-hover: #1b243a; --border-color: #1b243a;
+    --text-main: #e2e8f0; --text-muted: #94a3b8; --accent-color: #818cf8; --accent-hover: #6366f1;
+  }
+  [data-theme="storm"] {
+    --bg-main: #111827; --bg-panel: #1f2937; --bg-hover: #374151; --border-color: #374151;
+    --text-main: #f3f4f6; --text-muted: #9ca3af; --accent-color: #60a5fa; --accent-hover: #3b82f6;
+  }
+  [data-theme="nordic"] {
+    --bg-main: #1e2229; --bg-panel: #282d37; --bg-hover: #353b47; --border-color: #353b47;
+    --text-main: #e6edf3; --text-muted: #8b949e; --accent-color: #58a6ff; --accent-hover: #1f6feb;
+  }
+  [data-theme="noir"] {
+    --bg-main: #141414; --bg-panel: #1f1f1f; --bg-hover: #2d2d2d; --border-color: #2d2d2d;
+    --text-main: #e5e5e5; --text-muted: #737373; --accent-color: #f59e0b; --accent-hover: #d97706;
+  }
+  [data-theme="amber"] {
+    --bg-main: #120f0a; --bg-panel: #211b12; --bg-hover: #30271a; --border-color: #30271a;
+    --text-main: #fef3c7; --text-muted: #d97706; --accent-color: #f59e0b; --accent-hover: #b45309;
+  }
+  [data-theme="velvet"] {
+    --bg-main: #210f1c; --bg-panel: #33182b; --bg-hover: #47233c; --border-color: #47233c;
+    --text-main: #fdf2f8; --text-muted: #f472b6; --accent-color: #ec4899; --accent-hover: #db2777;
+  }
+  [data-theme="abyss"] {
+    --bg-main: #04151f; --bg-panel: #183a51; --bg-hover: #224d6b; --border-color: #224d6b;
+    --text-main: #e0f2fe; --text-muted: #7dd3fc; --accent-color: #38bdf8; --accent-hover: #0ea5e9;
+  }
+  [data-theme="canyon"] {
+    --bg-main: #221611; --bg-panel: #35231c; --bg-hover: #4a3127; --border-color: #4a3127;
+    --text-main: #ffedd5; --text-muted: #fdba74; --accent-color: #f97316; --accent-hover: #ea580c;
+  }
+  [data-theme="vampire"] {
+    --bg-main: #1c0a0a; --bg-panel: #2e1111; --bg-hover: #421a1a; --border-color: #421a1a;
+    --text-main: #fee2e2; --text-muted: #f87171; --accent-color: #dc2626; --accent-hover: #b91c1c;
+  }
+  [data-theme="cyber-drk"] {
+    --bg-main: #0c1017; --bg-panel: #161b22; --bg-hover: #21262d; --border-color: #21262d;
+    --text-main: #c9d1d9; --text-muted: #8b949e; --accent-color: #238636; --accent-hover: #2ea043;
+  }
+
   body {
     @apply bg-background text-main font-sans antialiased transition-colors duration-500 ease-in-out;
-    selection-background-color: var(--accent-color);
-    selection-color: #fff;
   }
   
-  /* Özel Kaydırma Çubuğu (Scrollbar) */
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: var(--bg-main); }
   ::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 10px; }
