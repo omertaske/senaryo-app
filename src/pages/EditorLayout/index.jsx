@@ -6,16 +6,23 @@ import EditorLayoutView from './EditorLayoutView';
 export default function EditorLayout() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { activeProject, setActiveProject } = useProjectStore();
+  
+  // updateActiveProject eklendi
+  const { activeProject, setActiveProject, updateActiveProject } = useProjectStore(); 
   
   const [activeTab, setActiveTab] = useState('script'); 
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false); // YENİ: Dışa aktarma modalı
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) setActiveProject(id);
   }, [id, setActiveProject]);
 
   const handleGoHome = () => navigate('/');
+
+  // YENİ: İsim değiştirme fonksiyonu
+  const handleRenameProject = (newTitle) => {
+     updateActiveProject({ title: newTitle });
+  };
 
   if (!activeProject) {
     return (
@@ -34,6 +41,7 @@ export default function EditorLayout() {
       handleGoHome={handleGoHome}
       isExportModalOpen={isExportModalOpen}
       setIsExportModalOpen={setIsExportModalOpen}
+      handleRenameProject={handleRenameProject} // YENİ: Fonksiyonu View'a gönderiyoruz
     />
   );
 }

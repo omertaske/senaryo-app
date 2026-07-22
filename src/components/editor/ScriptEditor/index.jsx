@@ -8,7 +8,9 @@ const BLOCK_TYPES = ['action', 'character', 'dialogue', 'parenthetical', 'scene'
 export default function ScriptEditor({ setActiveTab }) {
   const { activeProject, updateActiveProject, setTempEditTarget } = useProjectStore();
 
-  const episodes = activeProject?.episodes?.length > 0 
+  // BELLEK (PERFORMANS) DÜZENLEMESİ: IndexedDB'nin sürekli tetiklenip çökmeyi sağlamaması için
+  // Local state yapısı kuruldu. Değişiklikler yalnızca kullanıcının durakladığı anlarda kaydedilecek.
+  const initialEpisodes = activeProject?.episodes?.length > 0 
     ? activeProject.episodes 
     : [{ 
         id: uuidv4(), 
@@ -16,8 +18,32 @@ export default function ScriptEditor({ setActiveTab }) {
         scenes: activeProject?.scenes?.length > 0 ? activeProject.scenes : [{ id: uuidv4(), type: 'scene', text: '' }] 
       }];
 
-  const [activeEpId, setActiveEpId] = useState(episodes[0].id);
-  const currentEpisode = episodes.find(e => e.id === activeEpId) || episodes[0];
+  const [localEpisodes, setLocalEpisodes] = useState(initialEpisodes);
+  const latestEpisodesRef = useRef(localEpisodes);
+
+  useEffect(() => {
+    latestEpisodesRef.current = localEpisodes;
+  }, [localEpisodes]);
+
+  // DEBOUNCED KAYIT: Tuşa her basıldığında değil, 1 sn boşluk bırakıldığında veritabanına yaz.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const allScenes = localEpisodes.flatMap(ep => ep.scenes);
+      updateActiveProject({ episodes: localEpisodes, scenes: allScenes });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [localEpisodes, updateActiveProject]);
+
+  // UNMOUNT OLURKEN GARANTİ KAYIT
+  useEffect(() => {
+    return () => {
+      const allScenes = latestEpisodesRef.current.flatMap(ep => ep.scenes);
+      updateActiveProject({ episodes: latestEpisodesRef.current, scenes: allScenes });
+    };
+  }, [updateActiveProject]);
+
+  const [activeEpId, setActiveEpId] = useState(localEpisodes[0].id);
+  const currentEpisode = localEpisodes.find(e => e.id === activeEpId) || localEpisodes[0];
   const blocks = currentEpisode.scenes.length > 0 ? currentEpisode.scenes : [{ id: uuidv4(), type: 'scene', text: '' }];
 
   const inputRefs = useRef({});
@@ -28,23 +54,20 @@ export default function ScriptEditor({ setActiveTab }) {
   const locations = activeProject?.locations || [];
   const catalogs = activeProject?.catalogs || []; 
   
-  // STATELER: Büyük Önizleme ve Sağ Çekmece
   const [quickPreview, setQuickPreview] = useState(null);
-  const [rightDrawerItem, setRightDrawerItem] = useState(null); // YENİ: Çekmece State'i
+  const [rightDrawerItem, setRightDrawerItem] = useState(null);
 
   const [showRoadmap, setShowRoadmap] = useState(false);
   const sequences = activeProject?.sequences || [];
 
   const openQuickPreview = (type, data) => setQuickPreview({ type, data });
   const closeQuickPreview = () => setQuickPreview(null);
-
-  // YENİ: Çekmeceyi açan fonksiyon
   const openRightDrawer = (type, data) => setRightDrawerItem({ type, data });
   
   const goToEdit = (type, id) => {
     setTempEditTarget(type, id); 
     setQuickPreview(null); 
-    setRightDrawerItem(null); // Düzenlemeye gidince çekmeceyi kapat
+    setRightDrawerItem(null); 
     if (type === 'character') setActiveTab('characters'); 
     if (type === 'location') setActiveTab('locations');
   };
@@ -64,8 +87,8 @@ export default function ScriptEditor({ setActiveTab }) {
   }, [focusId, blocks.length]);
 
   const saveBlocks = (newBlocks) => {
-    const updatedEpisodes = episodes.map(ep => ep.id === activeEpId ? { ...ep, scenes: newBlocks } : ep);
-    updateActiveProject({ episodes: updatedEpisodes, scenes: newBlocks }); 
+    const updatedEpisodes = localEpisodes.map(ep => ep.id === activeEpId ? { ...ep, scenes: newBlocks } : ep);
+    setLocalEpisodes(updatedEpisodes);
   };
 
   const updateBlock = (id, newText) => {
@@ -75,19 +98,19 @@ export default function ScriptEditor({ setActiveTab }) {
 
   const addNewEpisode = () => {
     const newEpId = uuidv4();
-    const newEp = { id: newEpId, title: `Bölüm ${episodes.length + 1}`, scenes: [{ id: uuidv4(), type: 'scene', text: '' }] };
-    updateActiveProject({ episodes: [...episodes, newEp] });
+    const newEp = { id: newEpId, title: `Bölüm ${localEpisodes.length + 1}`, scenes: [{ id: uuidv4(), type: 'scene', text: '' }] };
+    setLocalEpisodes([...localEpisodes, newEp]);
     setActiveEpId(newEpId);
   };
 
   const deleteEpisode = (id) => {
-    if (episodes.length === 1) {
+    if (localEpisodes.length === 1) {
       alert("Senaryoda en az 1 bölüm bulunmalıdır.");
       return;
     }
     if (window.confirm("Bu bölümü ve içindeki tüm sahneleri silmek istediğinize emin misiniz?")) {
-      const updatedEpisodes = episodes.filter(ep => ep.id !== id);
-      updateActiveProject({ episodes: updatedEpisodes });
+      const updatedEpisodes = localEpisodes.filter(ep => ep.id !== id);
+      setLocalEpisodes(updatedEpisodes);
       if (activeEpId === id) setActiveEpId(updatedEpisodes[0].id);
     }
   };
@@ -173,7 +196,7 @@ export default function ScriptEditor({ setActiveTab }) {
       pendingItem={pendingItem}
       confirmAddItem={confirmAddItem}
       cancelAddItem={() => setPendingItem(null)}
-      episodes={episodes}
+      episodes={localEpisodes}
       activeEpId={activeEpId}
       setActiveEpId={setActiveEpId}
       addNewEpisode={addNewEpisode}
@@ -186,9 +209,9 @@ export default function ScriptEditor({ setActiveTab }) {
       showRoadmap={showRoadmap}
       setShowRoadmap={setShowRoadmap}
       sequences={sequences}
-      rightDrawerItem={rightDrawerItem} // YENİ EKLENDİ
-      setRightDrawerItem={setRightDrawerItem} // YENİ EKLENDİ
-      openRightDrawer={openRightDrawer} // YENİ EKLENDİ
+      rightDrawerItem={rightDrawerItem} 
+      setRightDrawerItem={setRightDrawerItem} 
+      openRightDrawer={openRightDrawer} 
     />
   );
 }

@@ -1,4 +1,4 @@
-import { Plus, FileText, Trash2, Upload, Clapperboard } from 'lucide-react';
+import { Plus, FileText, Trash2, Upload, Clapperboard, Sparkles } from 'lucide-react';
 import ThemeSelector from '../../components/ThemeSelector';
 
 export default function DashboardView({ 
@@ -23,8 +23,37 @@ export default function DashboardView({
           <div className="w-48"><ThemeSelector /></div>
         </div>
         
+        {/* Pazarlama Metni - Yalnızca hiç proje yoksa çıkar */}
+        {projects.length === 0 && (
+          <div className="bg-panel border border-accent/20 p-8 md:p-12 rounded-3xl mb-12 shadow-2xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-accent/10 to-transparent opacity-50 pointer-events-none"></div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-1 space-y-4">
+                <h2 className="text-3xl md:text-4xl font-bold text-main tracking-tight flex items-center gap-3">
+                  Hikayeni Gerçeğe Dönüştür! <Sparkles className="text-accent" size={32} />
+                </h2>
+                <p className="text-muted leading-relaxed text-sm md:text-base">
+                  Auteur Studio'ya hoş geldin! Burası, fikirlerini profesyonel bir  senaryosuna dönüştürmen için titizlikle tasarlandı. Sınırsız karakter yarat, mekanları referans görsellerle hayal et ve Mantar Pano (Story Board) ile olay örgünü kusursuzca inşa et. <strong className="text-main">Üstelik hiçbir verin buluta gitmez, tamamen senin tarayıcında güvende kalır.</strong>
+                </p>
+                <div className="pt-2 text-accent text-sm font-semibold flex items-center gap-2">
+                  <span className="flex h-3 w-3 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-accent"></span>
+                  </span>
+                  Aşağıdan ilk projeni oluşturarak hemen yazmaya başla!
+                </div>
+              </div>
+              <div className="hidden md:flex flex-col gap-3 items-end w-56">
+                 <div className="bg-accent/10 text-accent font-bold px-4 py-3 rounded-xl text-sm border border-accent/20 w-full text-center shadow-sm">🎭 Akıllı Karakter Önerisi</div>
+                 <div className="bg-accent/10 text-accent font-bold px-4 py-3 rounded-xl text-sm border border-accent/20 w-full text-center shadow-sm">🎬 Standart Senaryo Formatı</div>
+                 <div className="bg-accent/10 text-accent font-bold px-4 py-3 rounded-xl text-sm border border-accent/20 w-full text-center shadow-sm">🔒 %100 Yerel Güvenlik</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Oluşturma ve İçe Aktarma Paneli */}
-        <div className="flex flex-col md:flex-row gap-4 mb-16 bg-panel p-2 rounded-2xl border border-border shadow-2xl backdrop-blur-md">
+        <div className="flex flex-col md:flex-row gap-4 mb-16 bg-panel p-2 rounded-2xl border border-border shadow-2xl backdrop-blur-md relative z-20">
           <form onSubmit={handleCreate} className="flex flex-1 gap-2 p-2  ">
             <input 
               type="text" 
@@ -70,14 +99,6 @@ export default function DashboardView({
             </div>
           ))}
         </div>
-
-        {projects.length === 0 && (
-          <div className="text-center py-32 border-2 border-dashed border-border rounded-3xl opacity-50">
-            <Clapperboard size={64} className="mx-auto mb-6 text-muted" />
-            <h3 className="text-2xl font-bold text-main">Henüz bir projeniz yok</h3>
-            <p className="text-muted mt-2">İlk senaryonuzu yazmaya başlamak için yukarıdan oluşturun.</p>
-          </div>
-        )}
       </div>
     </div>
   );

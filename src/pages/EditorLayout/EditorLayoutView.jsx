@@ -1,4 +1,4 @@
-import { Home, Download, FileText, FileCode, Archive, X, Clapperboard } from 'lucide-react';
+import { Home, Download, FileText, FileCode, Archive, X, Clapperboard, Edit2 } from 'lucide-react';
 import ScriptEditor from '../../components/editor/ScriptEditor';
 import Characters from '../../components/editor/Characters';
 import Locations from '../../components/editor/Locations';
@@ -9,18 +9,52 @@ import Treatment from '../../components/editor/Treatment';
 import StorageIndicator from '../../components/StorageIndicator';
 import { exportToFountain, exportToSenaryo, exportToPDF } from '../../lib/exportUtils';
 
-export default function EditorLayoutView({ project, activeTab, setActiveTab, handleGoHome, isExportModalOpen, setIsExportModalOpen }) {
+export default function EditorLayoutView({ 
+  project, activeTab, setActiveTab, handleGoHome, isExportModalOpen, setIsExportModalOpen, handleRenameProject 
+}) {
+  
+  // İsim değiştirmek için basit kutucuk tetikleyicisi
+  const onRenameClick = () => {
+    const newName = window.prompt("Projenin yeni adını girin:", project.title);
+    if(newName !== null && newName.trim() !== "") {
+        handleRenameProject(newName.trim());
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background text-main font-sans overflow-hidden transition-colors duration-500">
       
       {/* Şık Yan Menü */}
       <aside className="w-72 bg-panel border-r border-border flex flex-col z-10 shadow-2xl">
-        <div className="p-6 border-b border-border flex items-center justify-between group cursor-pointer" onClick={handleGoHome}>
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="bg-accent/20 p-2 rounded-xl border border-accent/30"><Clapperboard size={20} className="text-accent" /></div>
-            <span className="font-bold text-lg truncate group-hover:text-accent transition-colors" title={project.title}>{project.title}</span>
+        
+        {/* YENİLENEN ÜST KISIM */}
+        <div className="p-6 border-b border-border flex items-center justify-between">
+          
+          {/* Proje Adı - Tıklanabilir */}
+          <div 
+            className="flex items-center gap-3 overflow-hidden group cursor-pointer flex-1" 
+            onClick={onRenameClick}
+            title="Proje adını değiştirmek için tıkla"
+          >
+            <div className="bg-accent/20 p-2 rounded-xl border border-accent/30 flex-shrink-0">
+              <Clapperboard size={20} className="text-accent" />
+            </div>
+            <div className="flex flex-col overflow-hidden">
+               <span className="font-bold text-lg truncate group-hover:text-accent transition-colors leading-tight">{project.title}</span>
+               <span className="text-[10px] text-accent opacity-0 group-hover:opacity-100 transition-opacity font-semibold flex items-center gap-1 mt-0.5">
+                 <Edit2 size={10}/> Yeniden Adlandır
+               </span>
+            </div>
           </div>
-          <button className="text-muted hover:text-main transition-colors bg-background p-2 rounded-full shadow-inner"><Home size={16} /></button>
+          
+          {/* Ayrı bir Ana Sayfa Butonu */}
+          <button 
+            onClick={handleGoHome} 
+            className="text-muted hover:text-main transition-colors bg-background p-2.5 rounded-full shadow-inner flex-shrink-0 ml-2 hover:scale-110" 
+            title="Ana Sayfaya Dön"
+          >
+            <Home size={18} />
+          </button>
         </div>
         
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -34,7 +68,7 @@ export default function EditorLayoutView({ project, activeTab, setActiveTab, han
         </nav>
         
         <div className="px-4 py-2"><StorageIndicator /></div>
-       
+        
 
         <div className="p-4 border-t border-border">
           <button 
@@ -57,7 +91,7 @@ export default function EditorLayoutView({ project, activeTab, setActiveTab, han
         {activeTab === 'catalogs' && <Catalogs />}
       </main>
 
-      {/* Şık İndirme Modalı */}
+      {/* Şık İndirme Modalı (Aynı kaldı) */}
       {isExportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-in fade-in" onClick={() => setIsExportModalOpen(false)}>
           <div className="bg-panel border border-border rounded-3xl w-full max-w-3xl shadow-[0_0_60px_rgba(0,0,0,0.5)] relative flex flex-col p-10" onClick={e => e.stopPropagation()}>

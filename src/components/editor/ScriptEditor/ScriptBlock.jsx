@@ -1,21 +1,35 @@
-import { forwardRef, useState, useEffect, useRef } from 'react';
+import { forwardRef, useState, useEffect, useRef, memo } from 'react';
 
-// TÜRKÇE KARAKTER SORUNUNU KESİN ÇÖZEN FONKSİYON
 const trUpper = (str) => str ? str.toLocaleUpperCase('tr-TR') : '';
 
 const ScriptBlock = forwardRef(({ 
   block, index, updateBlock, handleKeyDown, characters, catalogs, locations, openRightDrawer 
 }, ref) => {
 
+  const [localText, setLocalText] = useState(block.text);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const localRef = useRef(null);
+
+  useEffect(() => {
+    if (block.text !== localText) {
+      setLocalText(block.text);
+    }
+  }, [block.text]);
+
+  useEffect(() => {
+    if (localText === block.text) return; 
+    const timer = setTimeout(() => {
+      updateBlock(block.id, localText);
+    }, 400); 
+    return () => clearTimeout(timer);
+  }, [localText, block.id, block.text, updateBlock]);
 
   useEffect(() => {
     if (localRef.current) {
       localRef.current.style.height = 'auto';
       localRef.current.style.height = localRef.current.scrollHeight + 'px';
     }
-  }, [block.text]);
+  }, [localText]);
 
   const setRefs = (el) => {
     localRef.current = el;
@@ -26,12 +40,12 @@ const ScriptBlock = forwardRef(({
   const handleInput = (e) => {
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
-    updateBlock(block.id, e.target.value);
+    setLocalText(e.target.value); 
   };
 
   const isChar = block.type === 'character';
   const isScene = block.type === 'scene';
-  const typedText = trUpper(block.text.trim());
+  const typedText = trUpper(localText.trim()); 
   const cleanSceneSearch = isScene ? typedText.replace(/^(İÇ\.|DIŞ\.|İÇ\/DIŞ\.|İÇ |DIŞ )/i, '').split('-')[0].trim() : '';
 
   let suggestions = [];
@@ -43,13 +57,19 @@ const ScriptBlock = forwardRef(({
 
   useEffect(() => setSelectedIndex(0), [typedText]);
 
+  // Fareyle tıklanarak öneri seçildiğinde (Sadece formatlar ve o satırda kalır)
   const applySuggestion = (selected) => {
     if (isChar) {
-      updateBlock(block.id, trUpper(selected.name));
+      setLocalText(trUpper(selected.name));
+      updateBlock(block.id, trUpper(selected.name)); 
     } else if (isScene) {
-      const prefixMatch = trUpper(block.text).match(/^(İÇ\.|DIŞ\.|İÇ\/DIŞ\.|İÇ |DIŞ )/);
-      const prefix = prefixMatch ? prefixMatch[0] : '';
-      updateBlock(block.id, prefix + trUpper(selected.name));
+      const settingStr = selected.setting ? selected.setting.toUpperCase() : 'İÇ';
+      const timeStr = selected.timeOfDay ? selected.timeOfDay.toUpperCase() : 'GÜNDÜZ';
+      const prefix = settingStr.includes('.') ? settingStr : `${settingStr}.`;
+      const formattedScene = `${prefix} ${trUpper(selected.name)} - ${timeStr}`;
+      
+      setLocalText(formattedScene);
+      updateBlock(block.id, formattedScene);
     }
     setTimeout(() => {
       if (localRef.current) {
@@ -60,15 +80,79 @@ const ScriptBlock = forwardRef(({
   };
 
   const handleLocalKeyDown = (e) => {
+    // 1. Durum: Ekranda öneri listesi açıksa ve klavye kullanılıyorsa
     if (suggestions.length > 0) {
       if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex((p) => (p + 1) % suggestions.length); return; }
       if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex((p) => (p - 1 + suggestions.length) % suggestions.length); return; }
-      if (e.key === 'Enter') { e.preventDefault(); applySuggestion(suggestions[selectedIndex]); return; }
+      if (e.key === 'Enter') { 
+        e.preventDefault(); 
+        const selected = suggestions[selectedIndex];
+        let finalString = localText;
+        
+        if (isChar) {
+          finalString = trUpper(selected.name);
+        } else if (isScene) {
+          const settingStr = selected.setting ? selected.setting.toUpperCase() : 'İÇ';
+          const timeStr = selected.timeOfDay ? selected.timeOfDay.toUpperCase() : 'GÜNDÜZ';
+          const prefix = settingStr.includes('.') ? settingStr : `${settingStr}.`;
+          finalString = `${prefix} ${trUpper(selected.name)} - ${timeStr}`;
+        }
+        
+        setLocalText(finalString);
+        updateBlock(block.id, finalString);
+
+        // Öneriyi Enter ile seçtiğinde direkt alt satıra (Action) geçsin
+        handleKeyDown(e, index, { ...block, text: finalString });
+        return; 
+      }
     }
-    handleKeyDown(e, index, block);
+    
+    // 2. Durum: Kullanıcı öneriyi seçmeden, adını tam yazıp "Enter"a basarsa otomatik formatla
+    if (e.key === 'Enter') {
+       let finalString = localText;
+       
+       if (isScene) {
+           const cleanName = localText.replace(/^(İÇ\.|DIŞ\.|İÇ\/DIŞ\.|İÇ |DIŞ )/i, '').split('-')[0].trim();
+           const matchedLoc = locations.find(l => trUpper(l.name) === trUpper(cleanName));
+           
+           if (matchedLoc) {
+               const settingStr = matchedLoc.setting ? matchedLoc.setting.toUpperCase() : 'İÇ';
+               const timeStr = matchedLoc.timeOfDay ? matchedLoc.timeOfDay.toUpperCase() : 'GÜNDÜZ';
+               const prefix = settingStr.includes('.') ? settingStr : `${settingStr}.`;
+               finalString = `${prefix} ${trUpper(matchedLoc.name)} - ${timeStr}`;
+               
+               setLocalText(finalString);
+           }
+       }
+
+       if (isChar) {
+           const cleanCharName = localText.trim();
+           const matchedChar = characters.find(c => trUpper(c.name) === trUpper(cleanCharName));
+           if (matchedChar) {
+               finalString = trUpper(matchedChar.name);
+               setLocalText(finalString);
+           }
+       }
+       
+       if (finalString !== block.text) {
+         updateBlock(block.id, finalString);
+       }
+       // Her halükarda yeni satır oluşturmak için ana fonksiyonu tetikle
+       handleKeyDown(e, index, { ...block, text: finalString });
+       return; 
+    }
+
+    if (e.key === 'Tab') {
+       if (localText !== block.text) {
+         updateBlock(block.id, localText);
+       }
+       handleKeyDown(e, index, { ...block, text: localText });
+       return;
+    }
+    
+    handleKeyDown(e, index, { ...block, text: localText });
   };
 
-  // ÇEKMECEYİ AÇAN FONKSİYON
   const handleMouseUp = (e) => {
     if ((e.ctrlKey || e.metaKey) && openRightDrawer) {
       const text = trUpper(e.target.value);
@@ -84,7 +168,6 @@ const ScriptBlock = forwardRef(({
       }
       
       if (catalogs && catalogs.length > 0) {
-        // En uzun kelimeleri önce arıyoruz ki çakışma olmasın
         const sortedCatalogs = [...catalogs].sort((a, b) => (b.name?.length || 0) - (a.name?.length || 0));
 
         for (let item of sortedCatalogs) {
@@ -97,7 +180,7 @@ const ScriptBlock = forwardRef(({
           while ((indexFound = text.indexOf(itemName, startIndex)) > -1) {
             if (cursorPos >= indexFound && cursorPos <= indexFound + itemName.length) {
               e.preventDefault();
-              return openRightDrawer('catalog', item); // Büyük Modal yerine ÇEKMECE açılır
+              return openRightDrawer('catalog', item); 
             }
             startIndex = indexFound + itemName.length;
           }
@@ -120,7 +203,7 @@ const ScriptBlock = forwardRef(({
     <div className="relative flex flex-col">
       <textarea
         ref={setRefs}
-        value={block.text}
+        value={localText}
         onChange={handleInput}
         onKeyDown={handleLocalKeyDown}
         onMouseUp={handleMouseUp} 
@@ -138,9 +221,19 @@ const ScriptBlock = forwardRef(({
             <div
               key={s.id}
               onClick={() => applySuggestion(s)}
-              className={`px-4 py-3 cursor-pointer font-bold transition-colors border-b border-gray-700 last:border-0 ${i === selectedIndex ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
+              className={`px-4 py-3 cursor-pointer transition-colors border-b border-gray-700 last:border-0 ${i === selectedIndex ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
             >
-              {trUpper(s.name)}
+              <div className="font-bold">{trUpper(s.name)}</div>
+              {isScene && (s.setting || s.timeOfDay) && (
+                <div className={`text-[10px] mt-1 font-bold ${i === selectedIndex ? 'text-blue-200' : 'text-emerald-400'}`}>
+                  {s.setting ? s.setting.toUpperCase() : 'İÇ.'} - {s.timeOfDay ? s.timeOfDay.toUpperCase() : 'GÜNDÜZ'}
+                </div>
+              )}
+              {isChar && s.profession && (
+                <div className={`text-[10px] mt-1 font-bold ${i === selectedIndex ? 'text-blue-200' : 'text-blue-400'}`}>
+                  {s.profession.toUpperCase()}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -150,4 +243,9 @@ const ScriptBlock = forwardRef(({
 });
 
 ScriptBlock.displayName = 'ScriptBlock';
-export default ScriptBlock;
+
+export default memo(ScriptBlock, (prevProps, nextProps) => {
+  return prevProps.block.text === nextProps.block.text &&
+         prevProps.block.type === nextProps.block.type &&
+         prevProps.index === nextProps.index;
+});
