@@ -1,15 +1,15 @@
 import ScriptBlock from './ScriptBlock';
-import { Check, X, User, MapPin, Edit2, ListTree } from 'lucide-react';
+import { Check, X, User, MapPin, Edit2, ListTree, Archive, Music } from 'lucide-react';
 
 export default function ScriptEditorView({ 
-  blocks, updateBlock, handleKeyDown, inputRefs, characters, locations, 
+  blocks, updateBlock, handleKeyDown, inputRefs, characters, locations, catalogs,
   pendingItem, confirmAddItem, cancelAddItem, episodes, activeEpId, 
   setActiveEpId, addNewEpisode, deleteEpisode, setActiveTab, 
   quickPreview, closeQuickPreview, goToEdit, openQuickPreview,
-  showRoadmap, setShowRoadmap, sequences 
+  showRoadmap, setShowRoadmap, sequences,
+  rightDrawerItem, setRightDrawerItem, openRightDrawer // YENİ PROPLAR
 }) {
   return (
-    // DİKKAT: Yan yana esnek yerleşim için flex ve relative yapı
     <div className="flex w-full h-full relative overflow-hidden bg-gray-950">
       
       {/* SOL YAN PANEL: HİKAYE HARİTASI (BEATS / SEKANS LİSTESİ) */}
@@ -49,29 +49,24 @@ export default function ScriptEditorView({
         </div>
       </div>
 
-      {/* SAĞ TARAF: SENARYO YAZIM ALANI */}
+      {/* ORTA: SENARYO YAZIM ALANI */}
       <div className="flex-1 overflow-y-auto w-full pb-32">
         <div className="max-w-4xl mx-auto px-4 relative">
           
-          {/* Üst Bilgi Çubuğu */}
           <div className="flex items-center justify-between mb-4 p-4 bg-gray-800 rounded-lg text-sm text-gray-400 mt-8 shadow-md">
             <div className="flex items-center gap-4">
-              
-              {/* YOL HARİTASI AÇMA BUTONU */}
               {!showRoadmap && (
                 <button onClick={() => setShowRoadmap(true)} className="flex items-center gap-2 bg-amber-600/20 text-amber-500 hover:bg-amber-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-amber-500/30 font-semibold text-xs shadow">
                   <ListTree size={16} /> Haritayı Aç
                 </button>
               )}
-
               <span><kbd className="bg-gray-700 px-2 py-1 rounded text-xs">Tab</kbd> Tür</span>
               <span><kbd className="bg-gray-700 px-2 py-1 rounded text-xs">Enter</kbd> Yeni Satır</span>
-              <span className="text-blue-400"><kbd className="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">Ctrl</kbd> + Tık: Önizle</span>
+              <span className="text-blue-400"><kbd className="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">Ctrl</kbd> + Tık: Çekmeceyi Aç</span>
             </div>
             <div className="font-mono text-xs">Kelime: {blocks.reduce((acc, b) => acc + b.text.split(' ').filter(String).length, 0)}</div>
           </div>
 
-          {/* DİZİ / BÖLÜM SEKMELERİ */}
           <div className="flex gap-2 overflow-x-auto pb-2 border-b border-gray-700">
             {episodes.map(ep => (
               <div
@@ -101,7 +96,6 @@ export default function ScriptEditorView({
             </button>
           </div>
 
-          {/* A4 KAĞIDI GÖRÜNÜMÜ */}
           <div className="bg-white dark:bg-gray-100 text-black shadow-2xl min-h-[1056px] w-full p-16 font-mono text-lg rounded-b-xl rounded-tr-xl">
             {blocks.map((block, index) => (
               <ScriptBlock
@@ -113,16 +107,78 @@ export default function ScriptEditorView({
                 ref={(el) => (inputRefs.current[block.id] = el)} 
                 characters={characters}
                 locations={locations}
-                setActiveTab={setActiveTab}
-                openQuickPreview={openQuickPreview} 
+                catalogs={catalogs}
+                openRightDrawer={openRightDrawer} // BÜYÜK MODAL YERİNE ÇEKMECE
               />
             ))}
           </div>
-
         </div>
       </div>
 
-      {/* SİNEMATİK HIZLI ÖNİZLEME (QUICK PREVIEW) MODALI */}
+      {/* YENİ: SAĞ YAN ÇEKMECE (HIZLI BAKIŞ) */}
+      <div className={`flex-shrink-0 bg-gray-900 border-l border-gray-700 transition-all duration-300 overflow-y-auto h-full flex flex-col z-30 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] ${rightDrawerItem ? 'w-80' : 'w-0 border-none opacity-0'}`}>
+        {rightDrawerItem && (
+          <>
+            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-800/30 sticky top-0 z-10 backdrop-blur-md">
+              <h3 className="text-gray-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">Çekmece Önizleme</h3>
+              <button onClick={() => setRightDrawerItem(null)} className="text-gray-500 hover:text-white p-1 bg-gray-800 rounded-full"><X size={18} /></button>
+            </div>
+            
+            <div className="p-5 flex flex-col gap-6">
+              
+              {/* Görsel Alanı (Tıklayınca Tam Ekran Modalı Açar) */}
+              <div 
+                className="w-full h-44 bg-black rounded-xl border border-gray-700 relative group cursor-pointer overflow-hidden shadow-lg"
+                onClick={() => openQuickPreview(rightDrawerItem.type, rightDrawerItem.data)}
+                title="Büyük Ekran Önizleme İçin Tıkla"
+              >
+                 {rightDrawerItem.data.photos?.[0] ? (
+                   <img src={rightDrawerItem.data.photos[0]} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                 ) : (
+                   <div className="w-full h-full flex items-center justify-center text-gray-700 bg-gray-800"><Archive size={40}/></div>
+                 )}
+                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                    <span className="text-white font-bold text-sm bg-blue-600 px-4 py-2 rounded-full shadow-xl">Genişlet</span>
+                 </div>
+              </div>
+
+              <div>
+                <h2 className="text-2xl font-bold text-white uppercase break-words leading-tight">{rightDrawerItem.data.name}</h2>
+                <p className="text-xs text-blue-400 uppercase tracking-widest mt-2 font-bold bg-blue-900/30 inline-block px-2 py-1 rounded">
+                  {rightDrawerItem.type === 'character' ? 'Karakter' : rightDrawerItem.type === 'location' ? 'Mekan' : 'Katalog Objesi'}
+                </p>
+              </div>
+
+              {/* SES ÇALAR (Kullanıcı kendi başlatır) */}
+              {rightDrawerItem.data.mediaLink && !rightDrawerItem.data.mediaLink.includes('youtu') && (
+                <div className="bg-gray-800 rounded-xl p-4 border border-gray-700 shadow-inner flex flex-col gap-3">
+                  <div className="flex items-center gap-2 text-pink-400">
+                    <Music size={16} /> <span className="text-xs font-bold uppercase">Ses Oynatıcı</span>
+                  </div>
+                  <audio controls className="w-full h-10 outline-none rounded" src={rightDrawerItem.data.mediaLink} />
+                </div>
+              )}
+              
+              {/* Youtube Linki Varsa */}
+              {rightDrawerItem.data.mediaLink && rightDrawerItem.data.mediaLink.includes('youtu') && (
+                <button onClick={() => openQuickPreview(rightDrawerItem.type, rightDrawerItem.data)} className="bg-red-600/20 text-red-400 border border-red-500/30 p-3 rounded-lg text-sm font-bold hover:bg-red-600 hover:text-white transition-all shadow-lg">
+                  Youtube Videosunu İzle
+                </button>
+              )}
+
+              <div>
+                <h4 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2 border-b border-gray-800 pb-1">Kısa Bilgi</h4>
+                <p className="text-sm text-gray-300 line-clamp-6 leading-relaxed italic">
+                   {rightDrawerItem.data.description || 'Açıklama girilmemiş.'}
+                </p>
+              </div>
+
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ESKİ SİNEMATİK HIZLI ÖNİZLEME (QUICK PREVIEW) MODALI */}
       {quickPreview && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200" 
@@ -203,10 +259,10 @@ export default function ScriptEditorView({
                 </div>
               </>
             )}
-            {/* YENİ: KATALOG / MULTİMEDYA ÖNİZLEMESİ */}
+
+            {/* KATALOG / MULTİMEDYA ÖNİZLEMESİ */}
             {quickPreview.type === 'catalog' && (
               <div className="flex flex-col h-full bg-gray-900">
-                {/* 1. VİDEO VEYA DEV FOTOĞRAF ALANI */}
                 <div className="relative w-full bg-black flex items-center justify-center border-b border-gray-800" style={{ minHeight: '300px' }}>
                   
                   {/* YouTube Varsa Oynat */}
@@ -217,7 +273,7 @@ export default function ScriptEditorView({
                       title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen>
                     </iframe>
                   ) : 
-                  /* Video Yoksa Fotoğrafı Büyük Göster (Object Contain ile kırpmadan tam gösterir) */
+                  /* Video Yoksa Fotoğrafı Büyük Göster */
                   quickPreview.data.photos?.[0] ? (
                     <img src={quickPreview.data.photos[0]} className="w-full h-full max-h-[400px] object-contain p-4" alt="Katalog Görseli" />
                   ) : (
@@ -229,23 +285,9 @@ export default function ScriptEditorView({
                   </div>
                 </div>
 
-                {/* 2. BİLGİ VE SES ÇALAR ALANI */}
                 <div className="p-8 flex-1 overflow-y-auto">
                   <h2 className="text-3xl font-bold text-white uppercase tracking-wider mb-2">{quickPreview.data.name}</h2>
                   
-                  {/* MP3 VEYA BİLGİSAYARDAN YÜKLENEN SES VARSA OTOMATİK ÇAL */}
-                  {quickPreview.data.mediaLink && !quickPreview.data.mediaLink.includes('youtu') && (
-                     <div className="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
-                       <p className="text-xs text-pink-400 font-bold uppercase mb-3 flex items-center gap-2">
-                         <Music size={14}/> Medya Oynatıcı
-                       </p>
-                       <audio controls autoPlay className="w-full outline-none">
-                         <source src={quickPreview.data.mediaLink} />
-                         Tarayıcınız ses çaları desteklemiyor.
-                       </audio>
-                     </div>
-                  )}
-
                   <div className="bg-gray-800/50 p-5 rounded-xl border border-gray-700/50">
                     <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
                       {quickPreview.data.description || 'Bu öğe için detaylı bir açıklama girilmemiş.'}

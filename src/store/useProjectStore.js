@@ -38,6 +38,19 @@ export const useProjectStore = create(
         ]
       })),
 
+      // YENİ: DIŞARIDAN GELEN .SENARYO DOSYASINI İÇERİ ALMA (IMPORT)
+      importProject: (projectData) => set((state) => ({
+        projects: [
+          ...state.projects, 
+          { 
+            ...projectData, 
+            id: uuidv4(), // Çakışma olmasın diye yeni ID veriyoruz
+            title: `${projectData.title} (İçe Aktarıldı)`, // Karışmasın diye ismine not düşüyoruz
+            lastModified: new Date().toISOString()
+          }
+        ]
+      })),
+
       setActiveProject: (id) => set((state) => ({
         activeProject: state.projects.find(p => p.id === id) || null
       })),

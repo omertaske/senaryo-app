@@ -1,7 +1,10 @@
 import { forwardRef, useState, useEffect, useRef } from 'react';
 
+// TÜRKÇE KARAKTER SORUNUNU KESİN ÇÖZEN FONKSİYON
+const trUpper = (str) => str ? str.toLocaleUpperCase('tr-TR') : '';
+
 const ScriptBlock = forwardRef(({ 
-  block, index, updateBlock, handleKeyDown, characters, catalogs, locations, openQuickPreview 
+  block, index, updateBlock, handleKeyDown, characters, catalogs, locations, openRightDrawer 
 }, ref) => {
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -28,25 +31,25 @@ const ScriptBlock = forwardRef(({
 
   const isChar = block.type === 'character';
   const isScene = block.type === 'scene';
-  const typedText = block.text.trim().toUpperCase();
+  const typedText = trUpper(block.text.trim());
   const cleanSceneSearch = isScene ? typedText.replace(/^(İÇ\.|DIŞ\.|İÇ\/DIŞ\.|İÇ |DIŞ )/i, '').split('-')[0].trim() : '';
 
   let suggestions = [];
   if (isChar && typedText.length > 0) {
-    suggestions = characters.filter(c => c.name.toUpperCase().includes(typedText) && c.name.toUpperCase() !== typedText);
+    suggestions = characters.filter(c => trUpper(c.name).includes(typedText) && trUpper(c.name) !== typedText);
   } else if (isScene && cleanSceneSearch.length > 0) {
-    suggestions = locations.filter(l => l.name.toUpperCase().includes(cleanSceneSearch) && l.name.toUpperCase() !== cleanSceneSearch);
+    suggestions = locations.filter(l => trUpper(l.name).includes(cleanSceneSearch) && trUpper(l.name) !== cleanSceneSearch);
   }
 
   useEffect(() => setSelectedIndex(0), [typedText]);
 
   const applySuggestion = (selected) => {
     if (isChar) {
-      updateBlock(block.id, selected.name.toUpperCase());
+      updateBlock(block.id, trUpper(selected.name));
     } else if (isScene) {
-      const prefixMatch = block.text.toUpperCase().match(/^(İÇ\.|DIŞ\.|İÇ\/DIŞ\.|İÇ |DIŞ )/);
+      const prefixMatch = trUpper(block.text).match(/^(İÇ\.|DIŞ\.|İÇ\/DIŞ\.|İÇ |DIŞ )/);
       const prefix = prefixMatch ? prefixMatch[0] : '';
-      updateBlock(block.id, prefix + selected.name.toUpperCase());
+      updateBlock(block.id, prefix + trUpper(selected.name));
     }
     setTimeout(() => {
       if (localRef.current) {
@@ -65,38 +68,36 @@ const ScriptBlock = forwardRef(({
     handleKeyDown(e, index, block);
   };
 
-  // YENİ: Hata giderildi! onClick yerine onMouseUp (İmleç pozisyonunu garanti almak için)
+  // ÇEKMECEYİ AÇAN FONKSİYON
   const handleMouseUp = (e) => {
-    if ((e.ctrlKey || e.metaKey) && openQuickPreview) {
-      const text = e.target.value.toUpperCase();
+    if ((e.ctrlKey || e.metaKey) && openRightDrawer) {
+      const text = trUpper(e.target.value);
       const cursorPos = e.target.selectionStart;
 
       if (isChar) {
-        const found = characters.find(c => c.name.toUpperCase() === typedText);
-        if (found) return openQuickPreview('character', found);
+        const found = characters.find(c => trUpper(c.name) === typedText);
+        if (found) return openRightDrawer('character', found);
       }
       if (isScene) {
-        const found = locations.find(l => l.name.toUpperCase() === cleanSceneSearch);
-        if (found) return openQuickPreview('location', found);
+        const found = locations.find(l => trUpper(l.name) === cleanSceneSearch);
+        if (found) return openRightDrawer('location', found);
       }
       
       if (catalogs && catalogs.length > 0) {
-        // En uzun kelimeden en kısasına doğru ara ki "KANLI BIÇAK" kelimesini "BIÇAK" ile karıştırmasın
+        // En uzun kelimeleri önce arıyoruz ki çakışma olmasın
         const sortedCatalogs = [...catalogs].sort((a, b) => (b.name?.length || 0) - (a.name?.length || 0));
 
         for (let item of sortedCatalogs) {
           if (!item.name) continue;
-          const itemName = item.name.toUpperCase().trim();
+          const itemName = trUpper(item.name).trim();
           if (itemName.length === 0) continue;
 
-          // Kelimenin metindeki yerini bul (Birden fazla kez geçebilir, hepsini tara)
           let startIndex = 0;
           let indexFound;
           while ((indexFound = text.indexOf(itemName, startIndex)) > -1) {
-            // İmleç tam o kelimenin üstünde veya içindeyse şovu başlat!
             if (cursorPos >= indexFound && cursorPos <= indexFound + itemName.length) {
               e.preventDefault();
-              return openQuickPreview('catalog', item); 
+              return openRightDrawer('catalog', item); // Büyük Modal yerine ÇEKMECE açılır
             }
             startIndex = indexFound + itemName.length;
           }
@@ -122,8 +123,8 @@ const ScriptBlock = forwardRef(({
         value={block.text}
         onChange={handleInput}
         onKeyDown={handleLocalKeyDown}
-        onMouseUp={handleMouseUp} // DEĞİŞTİRİLDİ
-        title={(isChar || isScene) ? "Ctrl tuşuna basılı tutarak tıklarsan sekmesine gidersin" : "Katalog objesi ise Ctrl+Tık ile önizle"}
+        onMouseUp={handleMouseUp} 
+        title="Ctrl+Tık ile sağ çekmeceyi aç"
         placeholder={block.type.toUpperCase()}
         className={`block resize-none overflow-hidden bg-transparent outline-none text-lg transition-all ${getStyleClass(block.type)}`}
         rows={1}
@@ -139,7 +140,7 @@ const ScriptBlock = forwardRef(({
               onClick={() => applySuggestion(s)}
               className={`px-4 py-3 cursor-pointer font-bold transition-colors border-b border-gray-700 last:border-0 ${i === selectedIndex ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}
             >
-              {s.name.toUpperCase()}
+              {trUpper(s.name)}
             </div>
           ))}
         </div>

@@ -8,7 +8,6 @@ const BLOCK_TYPES = ['action', 'character', 'dialogue', 'parenthetical', 'scene'
 export default function ScriptEditor({ setActiveTab }) {
   const { activeProject, updateActiveProject, setTempEditTarget } = useProjectStore();
 
-  // BÖLÜM (EPISODE) VERİTABANI YÖNETİMİ
   const episodes = activeProject?.episodes?.length > 0 
     ? activeProject.episodes 
     : [{ 
@@ -24,28 +23,32 @@ export default function ScriptEditor({ setActiveTab }) {
   const inputRefs = useRef({});
   const [focusId, setFocusId] = useState(null);
   
-  // KARAKTER, MEKAN VE ÖNİZLEME STATELERİ
   const [pendingItem, setPendingItem] = useState(null);
   const characters = activeProject?.characters || [];
   const locations = activeProject?.locations || [];
-  const catalogs = activeProject?.catalogs || []; // YENİ: Katalog verileri
+  const catalogs = activeProject?.catalogs || []; 
+  
+  // STATELER: Büyük Önizleme ve Sağ Çekmece
   const [quickPreview, setQuickPreview] = useState(null);
+  const [rightDrawerItem, setRightDrawerItem] = useState(null); // YENİ: Çekmece State'i
 
-  // YENİ: YOL HARİTASI (HİKAYE HARİTASI YAN PANELİ) İÇİN STATELER
   const [showRoadmap, setShowRoadmap] = useState(false);
-  const sequences = activeProject?.sequences || []; // Beats panosundan gelen veriler
+  const sequences = activeProject?.sequences || [];
 
   const openQuickPreview = (type, data) => setQuickPreview({ type, data });
   const closeQuickPreview = () => setQuickPreview(null);
+
+  // YENİ: Çekmeceyi açan fonksiyon
+  const openRightDrawer = (type, data) => setRightDrawerItem({ type, data });
   
   const goToEdit = (type, id) => {
     setTempEditTarget(type, id); 
     setQuickPreview(null); 
+    setRightDrawerItem(null); // Düzenlemeye gidince çekmeceyi kapat
     if (type === 'character') setActiveTab('characters'); 
     if (type === 'location') setActiveTab('locations');
   };
 
-  // ODAKLANMA VE OTOMATİK KAYDIRMA (SCROLL)
   useEffect(() => {
     if (focusId) {
       setTimeout(() => {
@@ -60,7 +63,6 @@ export default function ScriptEditor({ setActiveTab }) {
     }
   }, [focusId, blocks.length]);
 
-  // VERİ KAYDETME FONKSİYONLARI
   const saveBlocks = (newBlocks) => {
     const updatedEpisodes = episodes.map(ep => ep.id === activeEpId ? { ...ep, scenes: newBlocks } : ep);
     updateActiveProject({ episodes: updatedEpisodes, scenes: newBlocks }); 
@@ -181,10 +183,12 @@ export default function ScriptEditor({ setActiveTab }) {
       openQuickPreview={openQuickPreview}
       closeQuickPreview={closeQuickPreview}
       goToEdit={goToEdit}
-      // Yol Haritası (Yan Panel) Propları
       showRoadmap={showRoadmap}
       setShowRoadmap={setShowRoadmap}
       sequences={sequences}
+      rightDrawerItem={rightDrawerItem} // YENİ EKLENDİ
+      setRightDrawerItem={setRightDrawerItem} // YENİ EKLENDİ
+      openRightDrawer={openRightDrawer} // YENİ EKLENDİ
     />
   );
 }
