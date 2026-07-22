@@ -233,12 +233,14 @@ export default function ScriptEditorView({
                 <div className="p-8 flex-1 overflow-y-auto">
                   <h2 className="text-3xl font-bold text-white uppercase tracking-wider mb-2">{quickPreview.data.name}</h2>
                   
-                  {/* MP3 veya Ses Linki Varsa (YouTube değilse) Ses Çalar Göster */}
+                  {/* MP3 VEYA BİLGİSAYARDAN YÜKLENEN SES VARSA OTOMATİK ÇAL */}
                   {quickPreview.data.mediaLink && !quickPreview.data.mediaLink.includes('youtu') && (
-                     <div className="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700">
-                       <p className="text-xs text-pink-400 font-bold uppercase mb-2 flex items-center gap-2"><Music size={14}/> Ses Kaydı / Müzik</p>
-                       <audio controls className="w-full h-10 outline-none">
-                         <source src={quickPreview.data.mediaLink} type="audio/mpeg" />
+                     <div className="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg">
+                       <p className="text-xs text-pink-400 font-bold uppercase mb-3 flex items-center gap-2">
+                         <Music size={14}/> Medya Oynatıcı
+                       </p>
+                       <audio controls autoPlay className="w-full outline-none">
+                         <source src={quickPreview.data.mediaLink} />
                          Tarayıcınız ses çaları desteklemiyor.
                        </audio>
                      </div>
@@ -250,6 +252,7 @@ export default function ScriptEditorView({
                     </p>
                   </div>
                 </div>
+                
               </div>
             )}
 
